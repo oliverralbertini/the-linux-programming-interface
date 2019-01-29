@@ -1,0 +1,5 @@
+This file contains	tabs	and isn't
+restricted to letters;
+some tokens
+contain apostrophes for example.
+Altogether, the file contains 20 unique tokens.
