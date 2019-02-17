@@ -28,9 +28,13 @@
 static void
 printFileDescriptionInfo(int fd)
 {
-
-    /* FIXME: Display file offset and O_APPEND setting for 'fd' */
-
+    off_t offset = lseek(fd, 0, SEEK_CUR);
+    if (offset == -1)
+        errExit("lseek");
+    int o_append = fcntl(fd, F_GETFL) & O_APPEND;
+    if (o_append == -1)
+        errExit("fcntl F_GETFL");
+    printf("fd %d: offset: %jd, O_APPEND: %s\n", fd, offset, o_append ? "true" : "false");
 }
 
 int
@@ -45,7 +49,20 @@ main(int argc, char *argv[])
     if (fd1 == -1)
         errExit("opening file %s", argv[1]);
 
-    /* FIXME: Complete as described in comments above */
+    fd2 = dup(fd1);
+
+    if (fd2 == -1)
+        errExit("dup2");
+
+    printFileDescriptionInfo(fd1);
+
+    if (lseek(fd1, 0, SEEK_END) == -1)
+        errExit("lseek");
+    flags = fcntl(fd1, F_SETFL, O_APPEND);
+    if (flags == -1)
+        errExit("fcntl F_SETFL");
+
+    printFileDescriptionInfo(fd2);
 
     exit(EXIT_SUCCESS);
 }

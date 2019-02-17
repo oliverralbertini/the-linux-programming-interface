@@ -32,8 +32,8 @@ main(int argc, char *argv[])
 #define BUF_SIZE 4096
     char buf[BUF_SIZE]; /* Buffer for use by read() and write() calls */
     int opt;
-
-    /* FIXME: Further variable declarations */
+    int fd;
+    ssize_t numRead;
 
     /* Parse command-line arguments */
 
@@ -60,12 +60,21 @@ main(int argc, char *argv[])
 
     pathname = argv[optind];
 
-    /* FIXME: Create and open 'pathname' for output, using either O_APPEND
-       or O_TRUNC; for the bit values (S_I*) used to construct the 'mode'
-       argument, see the open(2) man page. */
+    fd = open(pathname, (doAppend ? O_APPEND : O_TRUNC) | O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
 
-    /* FIXME: Read STDIN_FILENO until EOF, copying data to both
-       STDOUT_FILENO and descriptor returned by open() */
+    if (fd == -1)
+        errExit("open");
+
+    while ((numRead = read(STDIN_FILENO, buf, BUF_SIZE))) {
+        if (numRead == -1)
+            errExit("read");
+        if (write(STDOUT_FILENO, buf, numRead) == -1)
+            errExit("write");
+        if (write(fd, buf, numRead) == -1)
+            errExit("write");
+    }
+    if (numRead == -1)
+        errExit("read");
 
     exit(EXIT_SUCCESS);
 }

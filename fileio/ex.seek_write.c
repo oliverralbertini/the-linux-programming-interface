@@ -24,8 +24,7 @@ main(int argc, char *argv[])
     char *pathname;
     off_t offset;
     char *string;
-
-    /* FIXME: Further variable declarations */
+    int fd;
 
     if (argc != 4 || strcmp(argv[1], "--help") == 0)
         usageErr("%s pathname offset string\n", argv[0]);
@@ -34,7 +33,13 @@ main(int argc, char *argv[])
     offset = strtoll(argv[2], NULL, 0);
     string = argv[3];
 
-    /* FIXME: Open 'pathname', seek to 'offset', and write 'string' */
+    fd = open(pathname, O_RDWR, S_IRUSR | S_IWUSR);
+    if (fd == -1)
+        errExit("open");
+    if (lseek(fd, offset, SEEK_CUR) == -1)
+        errExit("lseek");
+    if (write(fd, string, strlen(string)) != strlen(string))
+        errExit("write");
 
     exit(EXIT_SUCCESS);
 }
