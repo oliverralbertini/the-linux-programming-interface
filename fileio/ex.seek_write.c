@@ -33,7 +33,7 @@ main(int argc, char *argv[])
     offset = strtoll(argv[2], NULL, 0);
     string = argv[3];
 
-    fd = open(pathname, O_RDWR, S_IRUSR | S_IWUSR);
+    fd = open(pathname, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
     if (fd == -1)
         errExit("open");
     if (lseek(fd, offset, SEEK_CUR) == -1)
