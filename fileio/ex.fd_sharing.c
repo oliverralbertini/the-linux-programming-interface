@@ -22,6 +22,9 @@
    * Displays the file offset and the state of the O_APPEND file
      status flag via the second file descriptor.
 */
+#include <unistd.h>
+#include <sys/syscall.h>
+#include <linux/kcmp.h>
 #include <fcntl.h>
 #include "tlpi_hdr.h"
 
@@ -37,10 +40,18 @@ printFileDescriptionInfo(int fd)
     printf("fd %d: offset: %jd, O_APPEND: %s\n", fd, offset, o_append ? "true" : "false");
 }
 
+// from kcmp(2):
+static int
+kcmp(pid_t pid1, pid_t pid2, int type,
+        unsigned long idx1, unsigned long idx2)
+{
+    return syscall(SYS_kcmp, pid1, pid2, type, idx1, idx2);
+}
+
 int
 main(int argc, char *argv[])
 {
-    int fd1, fd2, flags;
+    int fd1, fd2, flags, fdcmp;
 
     if (argc < 2 || strcmp(argv[1], "--help") == 0)
         usageErr("%s pathname\n", argv[0]);
@@ -63,6 +74,15 @@ main(int argc, char *argv[])
         errExit("fcntl F_SETFL");
 
     printFileDescriptionInfo(fd2);
+
+    fdcmp = kcmp(getpid(), getpid(), KCMP_FILE, fd1, fd2);
+    if (fdcmp == -1) errExit("kcmp");
+
+    if (fdcmp == 0) {
+        printf("fd %d and fd %d refer to the same open file description\n", fd1, fd2);
+    } else {
+        printf("fd %d and fd %d refer to different open file descriptions\n", fd1, fd2);
+    }
 
     exit(EXIT_SUCCESS);
 }
